@@ -19,8 +19,8 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <Button x:Name="btnOpenPublickeyFile" Content="Open Public Key File" Grid.Column="1" Grid.Row="1" Margin="10" Click="BtnOpenPublickeyFile_Click" />
-        <RichTextBox x:Name="txtInput" Grid.Column="1" Grid.Row="2" Margin="10" />
+        <Button x:Name="btnOpenPrivatekeyFile" Content="Open Private Key File" Grid.Column="1" Grid.Row="1" Margin="10" Click="BtnOpenPrivatekeyFile_Click" />
+        <TextBox x:Name="txtInput" Grid.Column="1" Grid.Row="2" Margin="10" />
         <Button x:Name="btnDecrypt" Content="Decrypt Data" Grid.Column="1" Grid.Row="3" Margin="10" Click="BtnDecrypt_Click" />
     </Grid>
 </Window>
