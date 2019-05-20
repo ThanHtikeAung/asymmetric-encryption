@@ -8,34 +8,62 @@ import java.nio.file.Files;
 import java.security.*;
 import java.security.spec.*;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
 public class EncryptionJava {
 
 	public static void main(String[] args) throws Exception {
-		String plainText = "Hello Encryption!";
+		String textToEncrypt = "Hello Encryption!";
+		String password = "Q0hBSU9wZW5NUlM=";
 		
 		PrivateKey privateKey = loadPrivatekey("private_key.der");
         PublicKey publicKey = loadPublickey("public_key.der");
 		
-		String encryptedText = encryptMessage(plainText, publicKey);
-        String descryptedText = decryptMessage(encryptedText, privateKey);
+		String encryptedPass = encryptPassword(password, publicKey);
+        String decryptedPass = decryptPassword(encryptedPass, privateKey);
  
-        System.out.println("input:" + plainText);
-        System.out.println("encrypted:" + encryptedText);
-        System.out.println("decrypted:" + descryptedText);
+        String encryptedText = encryptData(textToEncrypt, decryptedPass);
+        String decryptedText = decryptData(encryptedText, decryptedPass);
+        
+        System.out.println("input: " + textToEncrypt);
+        System.out.println("encrypted Password: " + encryptedPass);
+        System.out.println("decrypted Password: " + decryptedPass);
+        System.out.println("encrypted Input: " + encryptedText);
+        System.out.println("decrypted Input: " + decryptedText);
 	}
 	
-	// Decrypt using RSA public key
-    private static String decryptMessage(String encryptedText, PrivateKey privateKey) throws Exception {
+	private static String encryptData(String input, String password) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException
+	{
+		Cipher cipher = Cipher.getInstance("AES");
+		SecretKeySpec k = new SecretKeySpec(password.getBytes(), "AES");
+		cipher.init(Cipher.ENCRYPT_MODE, k);
+		return new String(cipher.doFinal(input.getBytes()));
+	}
+	
+	private static String decryptData(String input, String password) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException
+	{
+		Cipher cipher = Cipher.getInstance("AES");
+		SecretKeySpec k = new SecretKeySpec(password.getBytes(), "AES");
+		cipher.init(Cipher.DECRYPT_MODE, k);
+		return new String(cipher.doFinal(input.getBytes()));
+	}
+	
+	// Decrypt password using RSA public key
+    private static String decryptPassword(String encryptedText, PrivateKey privateKey) throws Exception {
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.DECRYPT_MODE, privateKey);
         return new String(cipher.doFinal(DatatypeConverter.parseBase64Binary(encryptedText)));
     }
 	
-	// Encrypt using RSA private key
-    private static String encryptMessage(String plainText, PublicKey publicKey) throws Exception {
+	// Encrypt password using RSA private key
+    private static String encryptPassword(String plainText, PublicKey publicKey) throws Exception {
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
         return DatatypeConverter.printBase64Binary(cipher.doFinal(plainText.getBytes()));
