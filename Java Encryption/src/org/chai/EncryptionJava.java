@@ -2,8 +2,8 @@ package org.chai;
 
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.security.*;
 import java.security.spec.*;
@@ -12,16 +12,21 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
 public class EncryptionJava {
 
+	static byte[] iv;
+	
+	public static String key = "Q0hBSU9wZW5NUlMrTElNUw==";
+    public static byte[] key_Array = DatatypeConverter.parseBase64Binary(key);
+	
 	public static void main(String[] args) throws Exception {
 		String textToEncrypt = "Hello Encryption!";
 		String password = "Q0hBSU9wZW5NUlM=";
+		
 		
 		PrivateKey privateKey = loadPrivatekey("private_key.der");
         PublicKey publicKey = loadPublickey("public_key.der");
@@ -36,23 +41,37 @@ public class EncryptionJava {
         System.out.println("encrypted Password: " + encryptedPass);
         System.out.println("decrypted Password: " + decryptedPass);
         System.out.println("encrypted Input: " + encryptedText);
+        System.out.println("encrypted Bytes: " + encryptedText.getBytes());
         System.out.println("decrypted Input: " + decryptedText);
 	}
-	
-	private static String encryptData(String input, String password) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException
+	private static String encryptData(String input, String password) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, InvalidParameterSpecException, UnsupportedEncodingException, InvalidKeySpecException
 	{
-		Cipher cipher = Cipher.getInstance("AES");
-		SecretKeySpec k = new SecretKeySpec(password.getBytes(), "AES");
-		cipher.init(Cipher.ENCRYPT_MODE, k);
-		return new String(cipher.doFinal(input.getBytes()));
+		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");        
+
+        // Don't change this. It must be same as C#
+		byte[] iv = { 1, 2, 3, 4, 5, 6, 6, 5, 4, 3, 2, 1, 7, 7, 7, 7 };
+        IvParameterSpec ivspec = new IvParameterSpec(iv);
+
+        Key SecretKey = new SecretKeySpec(key_Array, "AES");   
+        System.out.println(key_Array.length);
+        cipher.init(Cipher.ENCRYPT_MODE, SecretKey, ivspec);       
+
+        return DatatypeConverter.printBase64Binary(cipher.doFinal(input.getBytes()));
 	}
 	
-	private static String decryptData(String input, String password) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException
+	private static String decryptData(String input, String password) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, UnsupportedEncodingException, InvalidParameterSpecException, InvalidKeySpecException
 	{
-		Cipher cipher = Cipher.getInstance("AES");
-		SecretKeySpec k = new SecretKeySpec(password.getBytes(), "AES");
-		cipher.init(Cipher.DECRYPT_MODE, k);
-		return new String(cipher.doFinal(input.getBytes()));
+		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");            
+
+        // Don't change this. It must be same as C#
+		byte[] iv = { 1, 2, 3, 4, 5, 6, 6, 5, 4, 3, 2, 1, 7, 7, 7, 7 };
+        IvParameterSpec ivspec = new IvParameterSpec(iv);
+
+        Key SecretKey = new SecretKeySpec(key_Array, "AES");
+        cipher.init(Cipher.DECRYPT_MODE, SecretKey, ivspec);           
+
+        byte DecodedMessage[] = DatatypeConverter.parseBase64Binary(input);
+        return new String(cipher.doFinal(DecodedMessage));
 	}
 	
 	// Decrypt password using RSA public key
